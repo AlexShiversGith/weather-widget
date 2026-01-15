@@ -5,15 +5,34 @@ const API_KEY = 'ed3e0e6376e34854a7e81309250512'
 const URL = 'http://api.weatherapi.com/v1'
 
 function App() {
-  const [sity, setSity] = useState('Minsk')
+  const [sity, setSity] = useState('')
   const [weatherData, setWeatherData] = useState(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [coords, setCoords] = useState(null)
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setError('Your browser not supported geolocation')
+      return
+    } else {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const {latitude, longitude} = pos.coords
+        setCoords({latitude, longitude})
+      },
+      (err) => {
+        console.error("Geolocation error: ", err.message)
+        setError("Fallied to get your location")
+        }
+      )
+    }
+  }, [])
 
   const getData = async (url, method, sity) => {
     setLoading(true)
     try{
-      const res = await fetch(url + method + '?key=' + API_KEY + '&q=' + sity)
+      const query = sity.trim() ? sity : `${coords.latitude},${coords.longitude}`
+      const res = await fetch(url + method + '?key=' + API_KEY + '&q=' + query)
       const data = await res.json()
 
       if (data.error) {
@@ -55,8 +74,14 @@ function App() {
   }
 
   useEffect(() => {
+    if(!sity.trim() && !coords){
+      setError(null)
+      setWeatherData(null)
+      return
+    }
+
     getData(URL, '/current.json', sity)
-  }, [sity])
+  }, [sity, coords])
 
   return (
     <div className="app">
