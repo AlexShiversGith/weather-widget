@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import "./index.css";
 
 const API_KEY = 'ed3e0e6376e34854a7e81309250512'
-const URL = 'http://api.weatherapi.com/v1'
+const URL = 'https://api.weatherapi.com/v1'
 
 function App() {
   const [sity, setSity] = useState('')
@@ -74,13 +74,16 @@ function App() {
   }
 
   useEffect(() => {
-    if(!sity.trim() && !coords){
+    const controller = new AbortController () 
+    const signal = controller.signal
+    if(!sity.trim() && !coords){ 
       setError(null)
       setWeatherData(null)
       return
     }
 
     getData(URL, '/current.json', sity)
+    return () => controller.abort()
   }, [sity, coords])
 
   return (
